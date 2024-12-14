@@ -58,7 +58,7 @@ class PiwoDataset(Dataset):
 
         self.transform = A.Compose([
             # A.Resize(self.img_size, self.img_size, interpolation=cv2.INTER_AREA),
-            A.RandomResizedCrop(size=(self.img_size, self.img_size)),
+            A.RandomResizedCrop(size=(self.img_size, self.img_size), interpolation=cv2.INTER_NEAREST),
             A.HorizontalFlip(),
             A.RandomBrightnessContrast(brightness_limit=0.1),
             A.ShotNoise((0.0, 0.03)),

@@ -16,7 +16,7 @@ def export(model, dataset):
     model.export(saved_model_dir)
 
     def representative_dataset():
-        for i in range(2000):
+        for i in range(4000):
             img, ann = dataset[i]
             yield [img[None]]
 
@@ -44,7 +44,7 @@ def build_model():
     model = keras.Sequential([
         keras.Input(shape=(IMG_SIZE, IMG_SIZE, 3)),
         backbone,
-        keras.layers.Conv2D(1, 1, activation='sigmoid'),
+        keras.layers.Conv2D(1, 3, activation='sigmoid', padding='same'),
     ])
     return model
 
@@ -57,7 +57,7 @@ def build_model():
 
 
 def main():
-    keras.mixed_precision.set_global_policy("mixed_bfloat16")
+    # keras.mixed_precision.set_global_policy("mixed_bfloat16")
 
     print("Loading dataset...")
     train_dataset = PiwoDataset('data/annotations/instances_train2017.json', 'data/train2017', IMG_SIZE, MASK_SIZE)
@@ -70,7 +70,7 @@ def main():
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
-        # num_workers=4,
+        # num_workers=12,
     )
 
     model = build_model()

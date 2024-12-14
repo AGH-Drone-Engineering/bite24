@@ -91,9 +91,18 @@ int detector_detect(const unsigned char *image, int height, int width)
     ESP_LOGI(TAG, "Latency: %lld ms, FPS: %lld", latency / 1000, fps);
 
     // Get the output tensor
-    int prob = *output->data.int8;
+    int8_t *mask = output->data.int8;
 
-    ESP_LOGW(TAG, "Output: %d", prob);
+    ESP_LOGW(TAG, "Mask output:");
+    for (int i = 0; i < 17; i++)
+    {
+        for (int j = 0; j < 17; j++)
+        {
+            printf("%3d ", ((int) mask[i * 17 + j]) + 128);
+        }
+        printf("\n");
+    }
+    printf("\n");
 
     return 0;
 }

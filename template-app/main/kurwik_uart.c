@@ -36,6 +36,7 @@ void kurwik_uart_send(int speed_left, int speed_right)
     char buf[16];
     speed_left = CLAMP(speed_left, -255, 255);
     speed_right = CLAMP(speed_right, -255, 255);
-    snprintf(buf, sizeof(buf), "%d %d\n", speed_left, speed_right);
+    int sum = speed_left + speed_right;
+    snprintf(buf, sizeof(buf), "%+03d %+03d %+03d\n", speed_left, speed_right, sum);
     uart_write_bytes(UART_NUM_2, buf, strlen(buf));
 }

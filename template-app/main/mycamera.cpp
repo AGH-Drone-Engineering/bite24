@@ -55,7 +55,7 @@ static camera_config_t camera_config = {
 
     .jpeg_quality = 12, //0-63, for OV series camera sensors, lower number means higher quality
     .fb_count = 1, //When jpeg mode is used, if fb_count more than one, the driver will work in continuous mode.
-    .fb_location = CAMERA_FB_IN_DRAM,
+    .fb_location = CAMERA_FB_IN_PSRAM,
     .grab_mode = CAMERA_GRAB_LATEST//CAMERA_GRAB_LATEST. Sets when buffers should be filled
 };
 
@@ -92,6 +92,22 @@ esp_err_t mycamera_grab(unsigned char *image, int height, int width)
     }
 
     ESP_LOGI(TAG, "Picture converted!");
+
+    // printf("\n\n");
+    // uint8_t *jpeg_buf = NULL;
+    // size_t jpeg_len = 0;
+    // if (!fmt2jpg(pic->buf, pic->len, pic->width, pic->height, pic->format, 90, &jpeg_buf, &jpeg_len))
+    // {
+    //     ESP_LOGE(TAG, "Failed converting picture to JPEG!");
+    //     esp_camera_fb_return(pic);
+    //     return ESP_FAIL;
+    // }
+    // for (int i = 0; i < jpeg_len; i++)
+    // {
+    //     printf("%02x", jpeg_buf[i]);
+    // }
+    // printf("\n\n");
+    // free(jpeg_buf);
 
     esp_camera_fb_return(pic);
 
