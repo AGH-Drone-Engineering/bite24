@@ -3,6 +3,7 @@ import numpy as np
 import albumentations as A
 import os
 import json
+import torch
 import cv2
 from tqdm import tqdm
 
@@ -56,10 +57,11 @@ class PiwoDataset(Dataset):
         self.y = [image_annotations[idx] for idx in good_idxs]
 
         self.transform = A.Compose([
-            A.RandomResizedCrop(size=self.img_size),
+            # A.Resize(self.img_size, self.img_size, interpolation=cv2.INTER_AREA),
+            A.RandomResizedCrop(size=(self.img_size, self.img_size)),
             A.HorizontalFlip(),
             A.RandomBrightnessContrast(brightness_limit=0.1),
-            A.ShotNoise((0.02, 0.04)),
+            A.ShotNoise((0.0, 0.03)),
             A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
         ], bbox_params=A.BboxParams(format='coco', label_fields=['category_id']))
 
@@ -91,4 +93,4 @@ class PiwoDataset(Dataset):
             h = int(h * self.mask_size)
             cv2.rectangle(mask, (x, y), (x + w, y + h), 1, cv2.FILLED)
 
-        return image, mask
+        return torch.from_numpy(image), torch.from_numpy(mask)

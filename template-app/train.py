@@ -1,5 +1,5 @@
-import keras
 import tensorflow as tf
+import keras
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -49,24 +49,31 @@ def build_model():
     return model
 
 
-def collate_fn(examples):
-    images, masks = zip(*examples)
-    images = torch.stack([torch.from_numpy(image) for image in images])
-    masks = torch.stack([torch.from_numpy(mask) for mask in masks])
-    return images, masks
+# def collate_fn(examples):
+#     images, masks = zip(*examples)
+#     images = torch.stack([torch.from_numpy(image) for image in images])
+#     masks = torch.stack([torch.from_numpy(mask) for mask in masks])
+#     return images, masks
 
 
 def main():
+    keras.mixed_precision.set_global_policy("mixed_bfloat16")
+
     print("Loading dataset...")
     train_dataset = PiwoDataset('data/annotations/instances_train2017.json', 'data/train2017', IMG_SIZE, MASK_SIZE)
     print("Dataset loaded")
 
-    model = build_model()
-
     epochs = 100
-    batch_size = 512
+    batch_size = 256
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, num_workers=8)
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        # num_workers=4,
+    )
+
+    model = build_model()
 
     model.compile(
         optimizer=keras.optimizers.Adam(
