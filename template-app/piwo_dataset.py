@@ -56,7 +56,10 @@ class PiwoDataset(Dataset):
         self.y = [image_annotations[idx] for idx in good_idxs]
 
         self.transform = A.Compose([
-            A.Resize(self.img_size, self.img_size),
+            A.RandomResizedCrop(size=self.img_size),
+            A.HorizontalFlip(),
+            A.RandomBrightnessContrast(brightness_limit=0.1),
+            A.ShotNoise((0.02, 0.04)),
             A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
         ], bbox_params=A.BboxParams(format='coco', label_fields=['category_id']))
 

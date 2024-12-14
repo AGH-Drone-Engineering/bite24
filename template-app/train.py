@@ -7,12 +7,16 @@ from torch.utils.data import DataLoader
 from piwo_dataset import PiwoDataset
 
 
+IMG_SIZE = 240
+MASK_SIZE = 17
+
+
 def export(model, dataset):
     saved_model_dir = 'saved_model'
     model.export(saved_model_dir)
 
     def representative_dataset():
-        for i in range(1000):
+        for i in range(2000):
             img, ann = dataset[i]
             yield [img[None]]
 
@@ -30,7 +34,7 @@ def export(model, dataset):
 
 def build_model():
     backbone = keras.applications.MobileNetV2(
-        input_shape=(96, 96, 3),
+        input_shape=(IMG_SIZE, IMG_SIZE, 3),
         include_top=False,
         pooling=None,
         weights='imagenet',
@@ -38,7 +42,7 @@ def build_model():
     )
     backbone = keras.Model(backbone.input, backbone.layers[119].output)
     model = keras.Sequential([
-        keras.Input(shape=(96, 96, 3)),
+        keras.Input(shape=(IMG_SIZE, IMG_SIZE, 3)),
         backbone,
         keras.layers.Conv2D(1, 1, activation='sigmoid'),
     ])
@@ -54,7 +58,7 @@ def collate_fn(examples):
 
 def main():
     print("Loading dataset...")
-    train_dataset = PiwoDataset('data/annotations/instances_train2017.json', 'data/train2017', 96, 7)
+    train_dataset = PiwoDataset('data/annotations/instances_train2017.json', 'data/train2017', IMG_SIZE, MASK_SIZE)
     print("Dataset loaded")
 
     model = build_model()
