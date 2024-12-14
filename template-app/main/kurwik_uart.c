@@ -31,12 +31,10 @@ void kurwik_uart_init(void)
     ESP_ERROR_CHECK(uart_driver_install(UART_NUM_2, uart_buffer_size, uart_buffer_size, 10, &uart_queue, 0));
 }
 
-void kurwik_uart_send(int speed_left, int speed_right)
+void kurwik_uart_send(int is_detected, int x, int y, int area)
 {
-    char buf[16];
-    speed_left = CLAMP(speed_left, -255, 255);
-    speed_right = CLAMP(speed_right, -255, 255);
-    int sum = speed_left + speed_right;
-    snprintf(buf, sizeof(buf), "%+03d %+03d %+03d\n", speed_left, speed_right, sum);
+    char buf[64];
+    int sum = is_detected + x + y + area;
+    snprintf(buf, sizeof(buf), "%d %04d %04d %06d %06d\n", is_detected, x, y, area, sum);
     uart_write_bytes(UART_NUM_2, buf, strlen(buf));
 }

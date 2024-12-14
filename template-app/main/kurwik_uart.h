@@ -7,7 +7,7 @@ extern "C" {
 
 void kurwik_uart_init(void);
 
-void kurwik_uart_send(int speed_left, int speed_right);
+void kurwik_uart_send(int is_detected, int x, int y, int area);
 
 #ifdef __cplusplus
 }
