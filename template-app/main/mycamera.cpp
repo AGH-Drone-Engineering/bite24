@@ -4,6 +4,7 @@
 #include "freertos/task.h"
 #include "esp_camera.h"
 #include "esp_log.h"
+#include "img_converters.h"
 
 // XIAO ESP32-S3
 #define CAM_PIN_PWDN    -1 //power down is not used
@@ -54,7 +55,8 @@ static camera_config_t camera_config = {
 
     .jpeg_quality = 12, //0-63, for OV series camera sensors, lower number means higher quality
     .fb_count = 1, //When jpeg mode is used, if fb_count more than one, the driver will work in continuous mode.
-    .grab_mode = CAMERA_GRAB_WHEN_EMPTY//CAMERA_GRAB_LATEST. Sets when buffers should be filled
+    .fb_location = CAMERA_FB_IN_DRAM,
+    .grab_mode = CAMERA_GRAB_LATEST//CAMERA_GRAB_LATEST. Sets when buffers should be filled
 };
 
 void mycamera_init(void)
@@ -73,42 +75,18 @@ esp_err_t mycamera_grab(unsigned char *image, int height, int width)
 
     ESP_LOGI(TAG, "Picture taken! It's size was: %zu bytes", pic->len);
 
-    if (pic->width < width || pic->height < height) 
+    if (pic->width != width || pic->height != height) 
     {
         ESP_LOGE(TAG, "Picture size is not correct! Expected: %dx%d, got: %dx%d", width, height, pic->width, pic->height);
         esp_camera_fb_return(pic);
         return ESP_FAIL;
     }
 
-    ESP_LOGI(TAG, "Converting picture to RGB888 format...");
+    ESP_LOGI(TAG, "Converting picture...");
 
-    unsigned char *pixel888 = &image[0];
-
-    for (int y = 0; y < height; y++)
+    if (!fmt2rgb888(pic->buf, pic->len, pic->format, image))
     {
-        for (int x = 0; x < width; x++)    
-        {
-            int idx = (y * pic->width + x) * 2;
-
-            uint16_t pixel565 = (pic->buf[idx] << 8) | pic->buf[idx + 1];
-
-            // R
-            *pixel888 = ((pixel565 >> 11) * 527 + 23) >> 6;
-            pixel888 += 1;
-
-            // G
-            *pixel888 = (((pixel565 >> 5) & 63) * 259 + 33) >> 6;
-            pixel888 += 1;
-
-            // B
-            *pixel888 = ((pixel565 & 31) * 527 + 23) >> 6;
-            pixel888 += 1;
-        }
-    }
-
-    if (pixel888 != &image[height * width * 3]) 
-    {
-        ESP_LOGE(TAG, "Something went wrong during conversion! %p != %p", pixel888, &image[height * width * 3]);
+        ESP_LOGE(TAG, "Failed converting picture!");
         esp_camera_fb_return(pic);
         return ESP_FAIL;
     }
