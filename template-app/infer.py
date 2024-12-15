@@ -3,7 +3,7 @@ import tensorflow.lite as tflite
 
 
 def main():
-    model = tflite.Interpreter('model3/model_calibrated.tflite')
+    model = tflite.Interpreter('model-fin/model_calibrated.tflite')
     model.allocate_tensors()
 
     cap = cv2.VideoCapture(0)
