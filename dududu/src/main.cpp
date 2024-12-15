@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <MPU9250.h>
+#include <ESP32Servo.h>
 
 #include "mahony.h"
 
@@ -29,12 +30,27 @@
 static MPU9250 IMU(Wire, 0x68);
 static Mahony mahony;
 
+static Servo servo_a;
+static Servo servo_b;
+
 static float g_nav_target_yaw = 0.0f;
 
 static char g_s3_recv_buffer[256];
 static int g_s3_recv_buffer_index = 0;
 
 static unsigned long g_boot_time_ms;
+
+static void close_gripper()
+{
+    servo_a.write(0);
+    servo_b.write(180);
+}
+
+static void open_gripper()
+{
+    servo_a.write(45);
+    servo_b.write(135);
+}
 
 static void set_motor(int pin_a, int pin_b, int pin_e, float cmd)
 {
@@ -122,6 +138,9 @@ void setup()
     digitalWrite(MOT_R_B_PIN, LOW);
     digitalWrite(MOT_R_E_PIN, LOW);
 
+    servo_a.attach(SERVO_A_PIN);
+    servo_b.attach(SERVO_B_PIN);
+
     Wire.begin(I2C_SDA, I2C_SCL);
     int status = IMU.begin();
     if (status < 0)
@@ -138,15 +157,19 @@ void setup()
 
 void loop()
 {
-    delay(1);
+    // delay(1);
 
     IMU.readSensor();
 
     static unsigned long last_time = 0;
     unsigned long now = micros();
-    if (last_time = 0)
+    // if (last_time = 0)
+    // {
+    //     last_time = now;
+    // }
+    while (now - last_time < 1000)
     {
-        last_time = now;
+        now = micros();
     }
     float dt = (now - last_time) * 1e-6f;
     last_time = now;
