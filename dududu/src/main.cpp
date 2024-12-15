@@ -1,10 +1,11 @@
 #include <Arduino.h>
 #include <MPU9250.h>
 #include <ESP32Servo.h>
+#include <Adafruit_NeoPixel.h>
 
 #include "mahony.h"
 
-#define DISTANCE_PIN 14
+// #define DISTANCE_PIN 14
 
 #define MOT_L_B_PIN 17
 #define MOT_L_A_PIN 18
@@ -32,6 +33,11 @@ static Mahony mahony;
 
 static Servo servo_a;
 static Servo servo_b;
+
+#define NUMPIXELS 9
+#define LEDS_PIN 14
+
+static Adafruit_NeoPixel pixels(NUMPIXELS, LEDS_PIN, NEO_GRB + NEO_KHZ800);
 
 static float g_nav_target_yaw = 0.0f;
 
@@ -120,7 +126,7 @@ void setup()
     Serial.begin(115200);
     Serial1.begin(115200, SERIAL_8N1, S3_RX, S3_TX);
 
-    pinMode(DISTANCE_PIN, INPUT);
+    // pinMode(DISTANCE_PIN, INPUT);
 
     pinMode(MOT_L_A_PIN, OUTPUT);
     pinMode(MOT_L_B_PIN, OUTPUT);
@@ -140,6 +146,9 @@ void setup()
 
     servo_a.attach(SERVO_A_PIN);
     servo_b.attach(SERVO_B_PIN);
+    open_gripper();
+
+    pixels.begin();
 
     Wire.begin(I2C_SDA, I2C_SCL);
     int status = IMU.begin();
@@ -204,10 +213,14 @@ void loop()
     }
 
     float turn_cmd = 0.0f;
-         if (yaw_error > 10.0f) turn_cmd = 0.7f;
-    else if (yaw_error > 1.0f) turn_cmd = 0.5f;
-    else if (yaw_error < -10.0f) turn_cmd = -0.7f;
-    else if (yaw_error < -1.0f) turn_cmd = -0.5f;
+    if (yaw_error > 10.0f)
+        turn_cmd = 0.7f;
+    else if (yaw_error > 1.0f)
+        turn_cmd = 0.5f;
+    else if (yaw_error < -10.0f)
+        turn_cmd = -0.7f;
+    else if (yaw_error < -1.0f)
+        turn_cmd = -0.5f;
 
     // Serial.print("Yaw error: ");
     // Serial.println(yaw_error);
@@ -230,5 +243,24 @@ void loop()
             g_s3_recv_buffer[g_s3_recv_buffer_index] = c;
             g_s3_recv_buffer_index = (g_s3_recv_buffer_index + 1) % sizeof(g_s3_recv_buffer);
         }
+    }
+
+    static unsigned long last_led_update_ms = 0;
+    static int offset = 0;
+    if (millis() - last_led_update_ms > 50)
+    {
+        last_led_update_ms = millis();
+        pixels.clear();
+        for (int i = 0; i < 4; i++)
+        {
+            pixels.setPixelColor((i + offset) % 9, pixels.Color(255, 0, 0));
+        }
+        pixels.setPixelColor((4 + offset) % 9, pixels.Color(255, 255, 255));
+        for (int i = 5; i < 9; i++)
+        {
+            pixels.setPixelColor((i + offset) % 9, pixels.Color(0, 0, 255));
+        }
+        pixels.show();
+        offset = (offset + 1) % 9;
     }
 }
