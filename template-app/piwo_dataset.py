@@ -12,7 +12,7 @@ BOTTLE_ID = 44
 
 
 class PiwoDataset(Dataset):
-    def __init__(self, ann_path: str, img_path: str, img_size: int, mask_size: int):
+    def __init__(self, ann_path: str, img_path: str, img_size: int, mask_size: int, augment: bool = False):
         self.img_size = img_size
         self.mask_size = mask_size
 
@@ -56,14 +56,19 @@ class PiwoDataset(Dataset):
         self.x = [image_filenames[idx] for idx in good_idxs]
         self.y = [image_annotations[idx] for idx in good_idxs]
 
-        self.transform = A.Compose([
-            # A.Resize(self.img_size, self.img_size, interpolation=cv2.INTER_AREA),
-            A.RandomResizedCrop(size=(self.img_size, self.img_size), interpolation=cv2.INTER_NEAREST),
-            A.HorizontalFlip(),
-            A.RandomBrightnessContrast(brightness_limit=0.1),
-            A.ShotNoise((0.0, 0.03)),
-            A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
-        ], bbox_params=A.BboxParams(format='coco', label_fields=['category_id']))
+        if augment:
+            self.transform = A.Compose([
+                A.RandomResizedCrop(size=(self.img_size, self.img_size), interpolation=cv2.INTER_AREA),
+                A.HorizontalFlip(),
+                A.RandomBrightnessContrast(brightness_limit=0.1),
+                A.ShotNoise((0.0, 0.03)),
+                A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
+            ], bbox_params=A.BboxParams(format='coco', label_fields=['category_id']))
+        else:
+            self.transform = A.Compose([
+                A.Resize(self.img_size, self.img_size, interpolation=cv2.INTER_AREA),
+                A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
+            ], bbox_params=A.BboxParams(format='coco', label_fields=['category_id']))
 
     def __len__(self):
         return len(self.x)

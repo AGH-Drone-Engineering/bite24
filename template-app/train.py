@@ -8,7 +8,7 @@ from piwo_dataset import PiwoDataset
 
 
 IMG_SIZE = 240
-MASK_SIZE = 17
+MASK_SIZE = 15
 
 
 def export(model, dataset):
@@ -16,7 +16,7 @@ def export(model, dataset):
     model.export(saved_model_dir)
 
     def representative_dataset():
-        for i in range(4000):
+        for i in range(len(dataset)):
             img, ann = dataset[i]
             yield [img[None]]
 
@@ -40,7 +40,7 @@ def build_model():
         weights='imagenet',
         alpha=0.35,
     )
-    backbone = keras.Model(backbone.input, backbone.layers[119].output)
+    backbone = keras.Model(backbone.input, backbone.layers[115].output)
     model = keras.Sequential([
         keras.Input(shape=(IMG_SIZE, IMG_SIZE, 3)),
         backbone,
@@ -60,10 +60,11 @@ def main():
     # keras.mixed_precision.set_global_policy("mixed_bfloat16")
 
     print("Loading dataset...")
-    train_dataset = PiwoDataset('data/annotations/instances_train2017.json', 'data/train2017', IMG_SIZE, MASK_SIZE)
+    train_dataset = PiwoDataset('data/annotations/instances_train2017.json', 'data/train2017', IMG_SIZE, MASK_SIZE, augment=True)
+    calib_dataset = PiwoDataset('data/annotations/instances_train2017.json', 'data/train2017', IMG_SIZE, MASK_SIZE, augment=False)
     print("Dataset loaded")
 
-    epochs = 100
+    epochs = 250
     batch_size = 256
 
     train_loader = DataLoader(
@@ -90,10 +91,13 @@ def main():
     model.fit(
         train_loader,
         epochs=epochs,
+        callbacks=[
+            keras.callbacks.ModelCheckpoint('model-{epoch:03d}.keras'),
+        ]
     )
 
     model.save('model.keras')
-    export(model, train_dataset)
+    export(model, calib_dataset)
 
 
 if __name__ == '__main__':

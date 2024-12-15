@@ -3,7 +3,7 @@ import tensorflow.lite as tflite
 
 
 def main():
-    model = tflite.Interpreter('models/model_calibrated.tflite')
+    model = tflite.Interpreter('model3/model_calibrated.tflite')
     model.allocate_tensors()
 
     cap = cv2.VideoCapture(0)
@@ -14,11 +14,11 @@ def main():
             break
         frame_original = frame
 
-        frame = cv2.resize(frame, (96, 96), interpolation=cv2.INTER_LINEAR)
+        frame = cv2.resize(frame, (240, 240), interpolation=cv2.INTER_AREA)
         cv2.imshow('frame_infer', frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = (frame.astype('int32') - 128).astype('int8')
-        frame = frame[None] * 0
+        frame = frame[None]
 
         model.set_tensor(model.get_input_details()[0]['index'], frame)
         model.invoke()
